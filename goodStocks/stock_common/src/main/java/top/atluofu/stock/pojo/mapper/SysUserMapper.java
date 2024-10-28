@@ -30,4 +30,6 @@ public interface SysUserMapper {
      * @return SysUser
      */
     SysUser findByUserName(@Param("name") String userName);
+
+    SysUser getUserByUserName(@Param("name") String userName);
 }

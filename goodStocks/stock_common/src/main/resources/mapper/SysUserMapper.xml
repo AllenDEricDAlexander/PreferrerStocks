@@ -168,4 +168,10 @@
         from sys_user
         where username= #{name}
     </select>
+    <select id="getUserByUserName" resultType="top.atluofu.stock.pojo.entity.SysUser">
+        select
+        <include refid="Base_Column_List"/>
+        from sys_user
+        where username= #{name}
+    </select>
 </mapper>

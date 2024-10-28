@@ -5,6 +5,8 @@ import top.atluofu.stock.vo.LoginReqVo;
 import top.atluofu.stock.vo.LoginRespVo;
 import top.atluofu.stock.vo.R;
 
+import java.util.Map;
+
 /**
  * @ClassName: UserService
  * @description: 定义用户服务接口
@@ -23,8 +25,17 @@ public interface UserService {
 
     /**
      * 用户登录功能实现
+     *
      * @param vo
-     * @return  R<LoginRespVo>
+     * @return R<LoginRespVo>
      */
     R<LoginRespVo> login(LoginReqVo vo);
+
+
+    /**
+     * 登录校验码生成服务方法
+     *
+     * @return R<Map>
+     */
+    R<Map> getCaptchaCode();
 }
