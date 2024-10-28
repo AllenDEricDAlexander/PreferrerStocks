@@ -2,6 +2,7 @@ package top.atluofu.stock.service.impl;
 
 import com.alibaba.excel.EasyExcel;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.benmanes.caffeine.cache.Cache;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import lombok.extern.slf4j.Slf4j;
@@ -49,17 +50,17 @@ public class StockServiceImpl implements StockService {
     private final StockBusinessMapper stockBusinessMapper;
     private final StockRtInfoMapper stockRtInfoMapper;
     private final StockMarketIndexInfoMapper stockMarketIndexInfoMapper;
-
     private final StockBlockRtInfoMapper stockBlockRtInfoMapper;
-
+    private final Cache<String, Object> caffeineCache;
     private final StockInfoConfig stockInfoConfig;
 
-    public StockServiceImpl(StockBusinessMapper stockBusinessMapper, StockMarketIndexInfoMapper stockMarketIndexInfoMapper, StockBlockRtInfoMapper stockBlockRtInfoMapper, StockInfoConfig stockInfoConfig, StockRtInfoMapper stockRtInfoMapper) {
+    public StockServiceImpl(StockBusinessMapper stockBusinessMapper, StockMarketIndexInfoMapper stockMarketIndexInfoMapper, StockBlockRtInfoMapper stockBlockRtInfoMapper, StockInfoConfig stockInfoConfig, StockRtInfoMapper stockRtInfoMapper, Cache<String, Object> caffeineCache) {
         this.stockBusinessMapper = stockBusinessMapper;
         this.stockMarketIndexInfoMapper = stockMarketIndexInfoMapper;
         this.stockBlockRtInfoMapper = stockBlockRtInfoMapper;
         this.stockInfoConfig = stockInfoConfig;
         this.stockRtInfoMapper = stockRtInfoMapper;
+        this.caffeineCache = caffeineCache;
     }
 
     /**
@@ -366,5 +367,34 @@ public class StockServiceImpl implements StockService {
         List<Stock4EvrDayDomain> data = stockRtInfoMapper.getStockInfo4EvrDay(code, startTime, endTime);
         //3.组装数据，响应
         return R.ok(data);
+    }
+
+    /**
+     * 定义获取A股大盘最新数据
+     *
+     * @return
+     */
+    @Override
+    public R<List<InnerMarketDomain>> getInnnerMarketInfos() {
+        //从缓存中加载数据，如果不存在，则走补偿策略获取数据，并存入本地缓存
+        R<List<InnerMarketDomain>> data = (R<List<InnerMarketDomain>>) caffeineCache.get("innerMarketInfos", key -> {
+            //如果不存在，则从数据库查询
+            //1.获取最新的股票交易时间点
+            Date lastDate = DateTimeUtil.getLastDate4Stock(DateTime.now()).toDate();
+            //TODO 伪造数据，后续删除
+            lastDate = DateTime.parse("2022-01-03 09:47:00", DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss")).toDate();
+            //2.获取国内大盘编码集合
+            List<String> innerCodes = stockInfoConfig.getInner();
+            //3.调用mapper查询
+            List<InnerMarketDomain> infos = stockMarketIndexInfoMapper.getInnerIndexByTimeAndCodes(lastDate, innerCodes);
+            //4.响应
+            return R.ok(infos);
+        });
+        return data;
+    }
+
+    @Override
+    public void getNewestInnerMarketInfos() {
+
     }
 }

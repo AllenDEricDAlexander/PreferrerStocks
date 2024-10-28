@@ -35,4 +35,9 @@ public interface StockMarketIndexInfoMapper {
     List<Map> getStockTradeVol(@Param("markedIds") List<String> markedIds,
                                @Param("startTime") Date startTime,
                                @Param("endTime") Date endTime);
+
+
+    int insertBatch(List<StockMarketIndexInfo> infos);
+
+    List<InnerMarketDomain> getInnerIndexByTimeAndCodes(Date lastDate, List<String> innerCodes);
 }

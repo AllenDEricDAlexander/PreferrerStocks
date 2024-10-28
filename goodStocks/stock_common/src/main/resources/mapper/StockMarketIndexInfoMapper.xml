@@ -64,6 +64,9 @@
         group by smi.cur_time
         order by time asc;
     </select>
+    <select id="getInnerIndexByTimeAndCodes" resultType="top.atluofu.stock.pojo.domain.InnerMarketDomain">
+
+    </select>
 
     <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
         delete from stock_market_index_info
@@ -108,6 +111,20 @@
                 <if test="tradeVolume != null">#{tradeVolume,jdbcType=DECIMAL},</if>
                 <if test="curTime != null">#{curTime,jdbcType=TIMESTAMP},</if>
         </trim>
+    </insert>
+    <insert id="insertBatch">
+        insert into stock_market_index_info
+        ( id,mark_Id,cur_time
+        ,mark_name,cur_point,current_price
+        ,updown_rate,trade_account,trade_volume
+        )
+        values
+        <foreach collection="list" item="smi" separator=",">
+            (#{smi.id,jdbcType=BIGINT},#{smi.markId,jdbcType=CHAR},#{smi.curTime,jdbcType=TIMESTAMP}
+            ,#{smi.markName,jdbcType=VARCHAR},#{smi.curPoint,jdbcType=DECIMAL},#{smi.currentPrice,jdbcType=DECIMAL}
+            ,#{smi.updownRate,jdbcType=DECIMAL},#{smi.tradeAccount,jdbcType=BIGINT},#{smi.tradeVolume,jdbcType=BIGINT}
+            )
+        </foreach>
     </insert>
     <update id="updateByPrimaryKeySelective" parameterType="top.atluofu.stock.pojo.entity.StockMarketIndexInfo">
         update stock_market_index_info

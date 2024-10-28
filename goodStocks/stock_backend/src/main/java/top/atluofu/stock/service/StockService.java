@@ -1,6 +1,7 @@
 package top.atluofu.stock.service;
 
 import top.atluofu.stock.pojo.domain.InnerMarketDomain;
+import top.atluofu.stock.pojo.domain.Stock4EvrDayDomain;
 import top.atluofu.stock.pojo.domain.Stock4MinuteDomain;
 import top.atluofu.stock.pojo.domain.StockBlockDomain;
 import top.atluofu.stock.vo.R;
@@ -40,5 +41,9 @@ public interface StockService {
 
     R<List<Stock4MinuteDomain>> stockScreenTimeSharing(String code);
 
-    R<List<Map>> stockCreenDkLine(String stockCode);
+    R<List<Stock4EvrDayDomain>> stockCreenDkLine(String stockCode);
+
+    R<List<InnerMarketDomain>> getInnnerMarketInfos();
+
+    void getNewestInnerMarketInfos();
 }

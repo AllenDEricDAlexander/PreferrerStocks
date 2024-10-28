@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import top.atluofu.stock.pojo.domain.InnerMarketDomain;
+import top.atluofu.stock.pojo.domain.Stock4EvrDayDomain;
 import top.atluofu.stock.pojo.domain.Stock4MinuteDomain;
 import top.atluofu.stock.pojo.domain.StockBlockDomain;
 import top.atluofu.stock.service.StockService;
@@ -125,7 +126,7 @@ public class StockController {
      * @param stockCode 股票编码
      */
     @RequestMapping("/stock/screen/dkline")
-    public R<List<Map>> getDayKLinData(@RequestParam("code") String stockCode) {
+    public R<List<Stock4EvrDayDomain>> getDayKLinData(@RequestParam("code") String stockCode) {
         return stockService.stockCreenDkLine(stockCode);
     }
 }

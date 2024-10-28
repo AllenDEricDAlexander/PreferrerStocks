@@ -2,12 +2,14 @@ package top.atluofu.stock.pojo.mapper;
 
 import top.atluofu.stock.pojo.entity.StockBusiness;
 
+import java.util.List;
+
 /**
-* @author MQa010225
-* @description 针对表【stock_business(主营业务表)】的数据库操作Mapper
-* @createDate 2024-10-26 12:43:43
-* @Entity top.atluofu.stick.pojo.entity.StockBusiness
-*/
+ * @author MQa010225
+ * @description 针对表【stock_business(主营业务表)】的数据库操作Mapper
+ * @createDate 2024-10-26 12:43:43
+ * @Entity top.atluofu.stick.pojo.entity.StockBusiness
+ */
 public interface StockBusinessMapper {
 
     int deleteByPrimaryKey(Long id);
@@ -22,4 +24,10 @@ public interface StockBusinessMapper {
 
     int updateByPrimaryKey(StockBusiness record);
 
+    /**
+     * 获取所有股票的code
+     *
+     * @return
+     */
+    List<String> getStockIds();
 }
