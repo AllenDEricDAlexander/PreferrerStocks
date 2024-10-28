@@ -1,6 +1,11 @@
 package top.atluofu.stock.pojo.mapper;
 
+import org.apache.ibatis.annotations.Param;
+import top.atluofu.stock.pojo.domain.StockBlockDomain;
 import top.atluofu.stock.pojo.entity.StockBlockRtInfo;
+
+import java.util.Date;
+import java.util.List;
 
 /**
 * @author MQa010225
@@ -22,4 +27,5 @@ public interface StockBlockRtInfoMapper {
 
     int updateByPrimaryKey(StockBlockRtInfo record);
 
+    List<StockBlockDomain> sectorAllLimit(@Param("timePoint") Date timePoint);
 }

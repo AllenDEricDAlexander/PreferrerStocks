@@ -1,10 +1,12 @@
 package top.atluofu.stock.config;
 
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import top.atluofu.stock.utils.IdWorker;
+import top.atluofu.stock.vo.StockInfoConfig;
 
 /**
  * @ClassName: CommonConfig
@@ -14,6 +16,7 @@ import top.atluofu.stock.utils.IdWorker;
  * @Version: 1.0
  */
 @Configuration
+@EnableConfigurationProperties(StockInfoConfig.class)
 public class CommonConfig {
     /**
      * 密码加密器
