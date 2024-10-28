@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 /**
  * @ClassName: TestRedis
  * @description: 测试redis基础环境
@@ -13,17 +15,19 @@ import org.springframework.data.redis.core.RedisTemplate;
  * @Version: 1.0
  */
 @SpringBootTest
-public class TestRedis {
+class TestRedis {
 
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
 
     @Test
-    public void test01() {
+    void test01() {
+        String value = "myname";
+        String key = "zhangsan";
         //存入值
-        redisTemplate.opsForValue().set("myname", "zhangsan");
+        redisTemplate.opsForValue().set(key, value);
         //获取值
-        String myname = redisTemplate.opsForValue().get("myname");
-        System.out.println(myname);
+        String res = redisTemplate.opsForValue().get(key);
+        assertEquals(value, res);
     }
 }
