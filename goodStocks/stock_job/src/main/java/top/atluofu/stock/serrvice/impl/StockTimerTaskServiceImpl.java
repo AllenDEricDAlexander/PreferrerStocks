@@ -3,8 +3,10 @@ package top.atluofu.stock.serrvice.impl;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestTemplate;
@@ -39,6 +41,11 @@ import java.util.stream.Collectors;
 @Slf4j
 public class StockTimerTaskServiceImpl implements StockTimerTaskService {
 
+    /**
+     * 注入线程池对象
+     */
+    private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
+
     //注入格式解析bean
     private final ParserStockInfoUtil parserStockInfoUtil;
 
@@ -56,7 +63,7 @@ public class StockTimerTaskServiceImpl implements StockTimerTaskService {
 
     private final StockRtInfoMapper stockRtInfoMapper;
 
-    public StockTimerTaskServiceImpl(RestTemplate restTemplate, StockInfoConfig stockInfoConfig, IdWorker idWorker, StockMarketIndexInfoMapper stockMarketIndexInfoMapper, ParserStockInfoUtil parserStockInfoUtil, StockBusinessMapper stockBusinessMapper, RabbitTemplate rabbitTemplate, StockRtInfoMapper stockRtInfoMapper) {
+    public StockTimerTaskServiceImpl(RestTemplate restTemplate, StockInfoConfig stockInfoConfig, IdWorker idWorker, StockMarketIndexInfoMapper stockMarketIndexInfoMapper, ParserStockInfoUtil parserStockInfoUtil, StockBusinessMapper stockBusinessMapper, RabbitTemplate rabbitTemplate, StockRtInfoMapper stockRtInfoMapper, ThreadPoolTaskExecutor threadPoolTaskExecutor) {
         this.restTemplate = restTemplate;
         this.stockInfoConfig = stockInfoConfig;
         this.idWorker = idWorker;
@@ -65,6 +72,7 @@ public class StockTimerTaskServiceImpl implements StockTimerTaskService {
         this.stockBusinessMapper = stockBusinessMapper;
         this.rabbitTemplate = rabbitTemplate;
         this.stockRtInfoMapper = stockRtInfoMapper;
+        this.threadPoolTaskExecutor = threadPoolTaskExecutor;
     }
 
     @Override
@@ -152,22 +160,34 @@ public class StockTimerTaskServiceImpl implements StockTimerTaskService {
      */
     @Override
     public void getStockRtIndex() {
-        //批量获取股票ID集合
-        List<String> stockIds = stockBusinessMapper.getStockIds();
-        //计算出符合sina命名规范的股票id数据
+        //1.获取所有股票的id TODO 缓存优化
+        List<String> stockIds = stockBusinessMapper.findAllStockIds();//40--->3000
+        //深证：A：以0开头 上证：6开头
         stockIds = stockIds.stream().map(id -> {
-            return id.startsWith("6") ? "sh" + id : "sz" + id;
+            id = id.startsWith("6") ? "sh" + id : "sz" + id;
+            return id;
         }).collect(Collectors.toList());
-        //一次性查询过多，我们将需要查询的数据先进行分片处理，每次最多查询20条股票数据
-        Lists.partition(stockIds, 20).forEach(list -> {
-            //拼接股票url地址
-            String stockUrl = stockInfoConfig.getMarketUrl() + String.join(",", list);
-            //获取响应数据
-            String result = restTemplate.getForObject(stockUrl, String.class);
-            List<StockRtInfo> infos = parserStockInfoUtil.parser4StockOrMarketInfo(result, ParseType.ASHARE);
-            log.info("数据量：{}", infos.size());
-            //批量插入数据库
-            stockRtInfoMapper.insertBatch(infos);
+        //设置请求头数据
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Referer", "https://finance.sina.com.cn/stock/");
+        headers.add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.121 Safari/537.36");
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        //要求：将集合分组，每组的集合长度为20
+        Lists.partition(stockIds, 20).forEach(ids -> {
+            //每个分片的数据开启一个线程异步执行任务
+            threadPoolTaskExecutor.execute(() -> {
+                //拼接获取A股信息的url地址
+                String stockRtUrl = stockInfoConfig.getMarketUrl() + String.join(",", ids);
+                //发送请求获取数据
+//               String result = restTemplate.getForObject(stockRtUrl, String.class);
+                String result = restTemplate.postForObject(stockRtUrl, entity, String.class);
+                //解析获取股票数据
+                List<StockRtInfo> list = parserStockInfoUtil.parser4StockOrMarketInfo(result, 3);
+                //分批次批量插入
+                log.info("当前股票数据：{}", list);
+                stockRtInfoMapper.insertBatch(list);
+            });
         });
     }
 }

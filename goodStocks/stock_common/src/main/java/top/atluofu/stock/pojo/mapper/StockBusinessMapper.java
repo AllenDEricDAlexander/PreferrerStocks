@@ -30,4 +30,6 @@ public interface StockBusinessMapper {
      * @return
      */
     List<String> getStockIds();
+
+    List<String> findAllStockIds();
 }
