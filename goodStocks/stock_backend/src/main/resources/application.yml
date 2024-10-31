@@ -2,8 +2,10 @@
 server:
   port: 8091
 spring:
+  main:
+    allow-bean-definition-overriding: true
   profiles:
-    active: cache,stock,mq
+    active: cache,stock,mq,sharding
   # 配置mysql数据源
   datasource:
     druid:
